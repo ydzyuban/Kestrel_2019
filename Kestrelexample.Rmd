@@ -1,0 +1,112 @@
+---
+title: "MicriClimate2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(tidyverse)
+
+MicroClimate2018 <- read_csv("C:/Users/ydzyuban/Dropbox (ASU)/ASU/Transit Study summer 2017-2019/Summer2018_Phoenix_South_Mountain_Village/Data for discussion/FixedMicroClimate2018_removedoutliers.csv")
+
+MicroClimate2018$Date_TimeNew <- as.POSIXct(MicroClimate2018$`Date_Time`, format ="%m/%d/%Y %H:%M", tz="MST")
+
+MicroClimate2018$TimeNew <- format(MicroClimate2018$Date_TimeNew,"%H:%M")
+
+MicroClimate2018$Shift <- NA
+MicroClimate2018$Shift[which(MicroClimate2018$TimeNew >= "07:00:00" & MicroClimate2018$TimeNew <= "09:00:00")] <- 1
+MicroClimate2018$Shift[which(MicroClimate2018$TimeNew >= "12:00:00" & MicroClimate2018$TimeNew <= "14:00:00")] <- 2
+MicroClimate2018$Shift[which(MicroClimate2018$TimeNew >= "17:00:00" & MicroClimate2018$TimeNew <= "19:00:00")] <- 3
+
+
+#########
+Sun <- MicroClimate2018 %>% filter(ShadeType==1)
+Tree <- MicroClimate2018 %>% filter(ShadeType==3)
+BusShelter <- MicroClimate2018 %>% filter(ShadeType==2)
+Sign <- MicroClimate2018 %>% filter(ShadeType==4)
+Pole <- MicroClimate2018 %>% filter(ShadeType==7)
+# etc...
+
+SunvsTree <- within(merge(Sun,Tree,by="Date_Time"), {
+    Sun <- AmbientT.x
+    Tree <- AmbientT.y
+    DeltaAmbientT <- AmbientT.x - AmbientT.y
+    DeltaGlobeT <- GlobeT.x - GlobeT.y
+    DeltaHumidity <- Humidity.x - Humidity.y
+    StopID <- StopID.x
+    Shift <- Shift.x
+    Historical <- Historical.x
+    ShadeType <- ShadeType.y
+})[,c("Date_Time", "Historical", "Sun", "Tree", "DeltaAmbientT","DeltaGlobeT","DeltaHumidity", "StopID", "Shift", "ShadeType")]
+
+
+SunvsBus <- within(merge(Sun,BusShelter,by="Date_Time"), {
+    Sun <- AmbientT.x
+    Bus <- AmbientT.y   
+    DeltaAmbientT <- AmbientT.x - AmbientT.y
+    DeltaGlobeT <- GlobeT.x - GlobeT.y
+    DeltaHumidity <- Humidity.x - Humidity.y
+    StopID <- StopID.x
+    Shift <- Shift.x
+    Historical <- Historical.x
+    ShadeType <- ShadeType.y
+})[,c("Date_Time","Historical", "Sun", "Bus", "DeltaAmbientT","DeltaGlobeT","DeltaHumidity", "StopID", "Shift", "ShadeType")]
+
+
+SunvsAwning <- within(merge(Sun,Awning,by="Date_Time"), {
+    DeltaAmbientT <- AmbientT.x - AmbientT.y
+    DeltaGlobeT <- GlobeT.x - GlobeT.y
+    DeltaHumidity <- Humidity.x - Humidity.y
+    StopID <- StopID.x
+    Shift <- Shift.x
+    Historical <- Historical.x
+    ShadeType <- ShadeType.y
+})[,c("Date_Time","Historical","DeltaAmbientT","DeltaGlobeT","DeltaHumidity", "StopID", "Shift", "ShadeType")]
+
+
+SunvsAd <- within(merge(Sun,Ad,by="Date_Time"), {
+    DeltaAmbientT <- AmbientT.x - AmbientT.y
+    DeltaGlobeT <- GlobeT.x - GlobeT.y
+    DeltaHumidity <- Humidity.x - Humidity.y
+    StopID <- StopID.x
+    Shift <- Shift.x
+    Historical <- Historical.x
+    ShadeType <- ShadeType.y
+})[,c("Date_Time","Historical","DeltaAmbientT","DeltaGlobeT","DeltaHumidity", "StopID", "Shift", "ShadeType")]
+
+
+SunvsPole <- within(merge(Sun,Pole,by="Date_Time"), {
+    DeltaAmbientT <- AmbientT.x - AmbientT.y
+    DeltaGlobeT <- GlobeT.x - GlobeT.y
+    DeltaHumidity <- Humidity.x - Humidity.y
+    StopID <- StopID.x
+    Shift <- Shift.x
+    Historical <- Historical.x
+    ShadeType <- ShadeType.y
+})[,c("Date_Time","Historical","DeltaAmbientT","DeltaGlobeT","DeltaHumidity", "StopID", "Shift", "ShadeType")]
+
+```
+
+
+Analysis By shade type
+
+
+```{r}
+#Busstop
+
+SunvsBus %>% group_by(StopID, Shift) %>% summarise_at( .vars = vars(DeltaAmbientT), 
+                                                 .funs = funs(mean, sd, min, max,
+                                                              .args=list(na.rm=TRUE)))
+
+SunvsBus %>% group_by(StopID, Shift) %>% summarise_at( .vars = vars(DeltaGlobeT), 
+                                                 .funs = funs(mean, sd, min, max,
+                                                              .args=list(na.rm=TRUE)))
+
+
+```
+
+
